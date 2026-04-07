@@ -171,6 +171,59 @@ curl -X POST http://localhost:8000/tools/send_media_message \
 </details>
 
 <details>
+<summary><code>send_marketing_template_message</code> — Send marketing template messages</summary>
+
+Send pre-approved marketing template messages with optional policy controls and activity sharing settings. Marketing templates are not subject to the 24-hour message window restrictions.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `recipient_phone` (string, required) — Recipient's phone number with country code (e.g., `917823846641`)
+- `template_name` (string, required) — Name of the approved marketing template
+- `template_language_code` (string, optional, default: `en_US`) — Template language code (e.g., `en_US`, `es_ES`)
+- `components` (array, optional) — Array of template components containing parameter values
+- `product_policy` (string, optional) — Product policy setting: `CLOUD_API_FALLBACK` or `STRICT`
+- `message_activity_sharing` (boolean, optional) — Flag to control message activity sharing
+
+**Output:**
+
+```json
+{
+  "messaging_product": "whatsapp",
+  "contacts": [{"input": "917823846641", "wa_id": "917823846641"}],
+  "messages": [
+    {
+      "id": "wamid.xyz...",
+      "message_status": "accepted"
+    }
+  ]
+}
+```
+
+Possible message statuses:
+- `accepted` - Message has been accepted by WhatsApp and is being processed
+- `held_for_quality_assessment` - Message is being held for quality assessment before delivery
+- `paused` - Message delivery has been paused
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/send_marketing_template_message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "recipient_phone": "917823846641",
+    "template_name": "marketing_promotion",
+    "template_language_code": "en_US",
+    "product_policy": "CLOUD_API_FALLBACK"
+  }'
+```
+
+</details>
+
+<details>
 <summary><code>test_connection</code> — Verify API credentials and phone number</summary>
 
 Test your WhatsApp Cloud API connection and phone number configuration. Retrieves phone number details and quality rating.
@@ -231,6 +284,449 @@ curl -X POST http://localhost:8000/tools/get_message_attachment \
   -d '{
     "api_key": "YOUR_API_KEY",
     "media_id": "12345"
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>get_message_history_events</code> — Query message delivery status events</summary>
+
+Retrieve paginated delivery status events for messages using the WhatsApp Message History API. Supports filtering by status and pagination.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `message_history_id` (string, required) — WhatsApp Business Message History ID
+- `status_filter` (string, optional) — Filter by status: `ACCEPTED`, `DELIVERED`, `ERROR`, `READ`, `SENT`
+- `fields` (string, optional) — Comma-separated fields to include (e.g., `id,delivery_status,error_description,occurrence_timestamp,status_timestamp`)
+- `limit` (integer, optional, default: 25) — Max events per page (1-100)
+- `after` (string, optional) — Pagination cursor for next page
+- `before` (string, optional) — Pagination cursor for previous page
+
+**Output:**
+
+```json
+{
+  "data": [
+    {
+      "id": "event_id",
+      "delivery_status": "DELIVERED",
+      "occurrence_timestamp": 1234567890,
+      "status_timestamp": 1234567891
+    }
+  ],
+  "paging": {
+    "cursors": {
+      "after": "next_cursor",
+      "before": "prev_cursor"
+    }
+  }
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/get_message_history_events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "message_history_id": "123456789",
+    "status_filter": "DELIVERED",
+    "limit": 50
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>configure_conversational_automation</code> — Configure bot automation settings</summary>
+
+Configure conversational automation settings for a WhatsApp Business Account phone number, including welcome messages, conversation prompts, and bot commands.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `enable_welcome_message` (boolean, optional) — Enable/disable welcome messages for new conversations
+- `prompts` (array, optional) — List of conversation prompts (ice breakers) to guide customer interactions
+- `commands` (array, optional) — List of bot commands with `command_name` and `command_description` keys
+
+**Output:**
+
+```json
+{
+  "success": true
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/configure_conversational_automation \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "enable_welcome_message": true,
+    "prompts": ["How can I help you?", "What do you need?"],
+    "commands": [
+      {
+        "command_name": "help",
+        "command_description": "Get help with your order"
+      },
+      {
+        "command_name": "status",
+        "command_description": "Check your order status"
+      }
+    ]
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>get_bot_details</code> — Retrieve bot configuration details</summary>
+
+Fetch WhatsApp Business Bot configuration including id, prompts, commands, and welcome message settings.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `bot_id` (string, required) — WhatsApp Business Bot ID
+- `fields` (string, optional) — Comma-separated fields to include (e.g., `id,prompts,commands,enable_welcome_message`)
+
+**Output:**
+
+```json
+{
+  "id": "123456789",
+  "enable_welcome_message": true,
+  "prompts": ["How can I help you?", "What do you need?"],
+  "commands": [
+    {
+      "command_name": "help",
+      "command_description": "Get help with your order"
+    }
+  ]
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/get_bot_details \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "bot_id": "123456789",
+    "fields": "id,prompts,commands,enable_welcome_message"
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>check_call_permissions</code> — Check WhatsApp call permissions</summary>
+
+Check whether you have permission to call a WhatsApp user and retrieve available actions and rate limits.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `user_wa_id` (string, required) — The WhatsApp ID of the user to check call permissions for
+
+**Output:**
+
+```json
+{
+  "messaging_product": "whatsapp",
+  "permission": {
+    "status": "granted",
+    "expiration_time": 1234567890
+  },
+  "actions": [
+    {
+      "action_name": "start_call",
+      "can_perform_action": true,
+      "limits": [
+        {
+          "time_period": "24h",
+          "current_usage": 5,
+          "max_allowed": 100,
+          "limit_expiration_time": 1234567890
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/check_call_permissions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "user_wa_id": "917823846641"
+  }'
+```
+
+**Permission Statuses:**
+- `granted` - You have active permission to call this user
+- `pending` - A permission request has been sent but not yet approved
+- `denied` - The user has denied call permissions
+- `expired` - Previous permission has expired
+
+</details>
+
+<details>
+<summary><code>manage_call</code> — Initiate, accept, reject, or terminate calls</summary>
+
+Manage WhatsApp calls with actions to connect, accept, reject, or terminate. Supports session description protocol (SDP) for call setup.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `action` (string, required) — Call action: `connect`, `pre_accept`, `accept`, `reject`, or `terminate`
+- `to` (string, optional) — The WhatsApp number being called (required for connect/pre_accept/accept/reject)
+- `call_id` (string, optional) — The WhatsApp call ID (required for terminate action)
+- `session` (object, optional) — Session description protocol with `sdp_type` (offer/answer) and `sdp` string
+- `biz_opaque_callback_data` (string, optional) — Arbitrary string for tracking (max 512 characters)
+
+**Output:**
+
+```json
+{
+  "messaging_product": "whatsapp",
+  "calls": [
+    {
+      "id": "call_id_123"
+    }
+  ]
+}
+```
+
+Or for terminate:
+
+```json
+{
+  "success": true
+}
+```
+
+**Usage Examples:**
+
+Initiate a call:
+```bash
+curl -X POST http://localhost:8000/tools/manage_call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "action": "connect",
+    "to": "917823846641",
+    "session": {
+      "sdp_type": "offer",
+      "sdp": "v=0\r\no=- ..."
+    }
+  }'
+```
+
+Terminate a call:
+```bash
+curl -X POST http://localhost:8000/tools/manage_call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "action": "terminate",
+    "call_id": "call_id_123"
+  }'
+```
+
+**Available Actions:**
+- `connect` - Initiate a new call to a user (requires `to` and session SDP)
+- `pre_accept` - Pre-accept a call
+- `accept` - Accept an incoming call (requires session SDP with type "answer")
+- `reject` - Reject a call
+- `terminate` - End an active call (requires `call_id`)
+
+</details>
+
+<details>
+<summary><code>get_qr_code</code> — Retrieve QR code details and image</summary>
+
+Retrieve details for a WhatsApp Message QR code including the image URL for use in marketing materials.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `qr_code_id` (string, required) — The unique 14-character identifier of the QR code
+- `fields` (string, optional) — Comma-separated fields to include (e.g., `code,prefilled_message,deep_link_url,qr_image_url.format(SVG)`)
+
+**Output:**
+
+```json
+{
+  "data": [
+    {
+      "code": "dcbf1f8edc4f6d",
+      "prefilled_message": "Hello from WhatsApp!",
+      "deep_link_url": "https://wa.me/...",
+      "qr_image_url": "https://graph.facebook.com/v21.0/..."
+    }
+  ]
+}
+```
+
+**Available Fields:**
+- `code` - QR code identifier (always included)
+- `prefilled_message` - Pre-filled message text (always included)
+- `deep_link_url` - WhatsApp deep link URL (always included)
+- `creation_time` - Unix timestamp when QR code was created (first-party apps only)
+- `qr_image_url.format(SVG|PNG)` - QR code image URL in specified format
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/get_qr_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "qr_code_id": "dcbf1f8edc4f6d",
+    "fields": "code,prefilled_message,qr_image_url.format(PNG)"
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>delete_qr_code</code> — Delete a QR code permanently</summary>
+
+Permanently delete a WhatsApp Message QR code. Once deleted, the QR code and associated deep link become invalid. This action cannot be undone.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `phone_number_id` (string, required) — Your WhatsApp Business Account phone number ID
+- `qr_code_id` (string, required) — The unique 14-character identifier of the QR code to delete
+
+**Output:**
+
+```json
+{
+  "success": true
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/delete_qr_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "phone_number_id": "1077755395418019",
+    "qr_code_id": "dcbf1f8edc4f6d"
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>get_whatsapp_business_profile</code> — Retrieve business profile details</summary>
+
+Retrieve comprehensive information about your WhatsApp Business Profile including account name, description, contact details, business vertical, websites, and profile picture.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `business_profile_id` (string, required) — Your WhatsApp Business Profile ID
+- `fields` (string, optional) — Comma-separated fields to include (e.g., `id,account_name,description,email,about,address,vertical,websites,profile_picture_url`)
+
+**Output:**
+
+```json
+{
+  "id": "123456789",
+  "account_name": "My Business",
+  "description": "Business description",
+  "email": "contact@business.com",
+  "about": "About section text",
+  "address": "123 Main Street, City, State",
+  "vertical": "RETAIL",
+  "websites": ["https://example.com"],
+  "profile_picture_url": "https://graph.facebook.com/...",
+  "messaging_product": "whatsapp"
+}
+```
+
+**Available Verticals:**
+UNDEFINED, OTHER, AUTO, BEAUTY, APPAREL, EDU, ENTERTAIN, EVENT_PLAN, FINANCE, GROCERY, GOVT, HOTEL, HEALTH, NONPROFIT, PROF_SERVICES, RETAIL, TRAVEL, RESTAURANT, NOT_A_BIZ
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/get_whatsapp_business_profile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "business_profile_id": "123456789",
+    "fields": "id,account_name,description,email,vertical,websites"
+  }'
+```
+
+</details>
+
+<details>
+<summary><code>update_whatsapp_business_profile</code> — Update business profile information</summary>
+
+Update your WhatsApp Business Profile with current business information, contact details, and configuration. All fields are optional.
+
+**Inputs:**
+
+- `api_key` (string, required) — WhatsApp Cloud API access token
+- `business_profile_id` (string, required) — Your WhatsApp Business Profile ID
+- `account_name` (string, optional) — Name of the business account
+- `description` (string, optional) — Business description text
+- `email` (string, optional) — Contact email address
+- `about` (string, optional) — About section text
+- `address` (string, optional) — Physical address of the business
+- `vertical` (string, optional) — Industry vertical classification
+- `websites` (array, optional) — List of website URLs associated with the business
+- `profile_picture_handle` (string, optional) — Handle of profile picture from Resumable Upload API
+
+**Output:**
+
+```json
+{
+  "id": "123456789",
+  "success": true
+}
+```
+
+**Usage Example:**
+
+```bash
+curl -X POST http://localhost:8000/tools/update_whatsapp_business_profile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_API_KEY",
+    "business_profile_id": "123456789",
+    "account_name": "Updated Business Name",
+    "description": "Updated business description",
+    "email": "newemail@business.com",
+    "address": "456 New Street, City, State",
+    "vertical": "RETAIL",
+    "websites": ["https://newsite.com", "https://shop.com"]
   }'
 ```
 
