@@ -241,39 +241,52 @@ curl -X POST http://localhost:8000/tools/get_message_attachment \
 ## API Parameters Reference
 
 <details>
-<summary><strong>Phone Number Format</strong></summary>
+<summary><strong>Common Parameters</strong></summary>
 
-WhatsApp phone numbers must include the country code without `+` or `0` prefix:
-
-- Correct: `917823846641` (country code 91 = India)
-- Correct: `14155552671` (country code 1 = US)
-- Incorrect: `+917823846641`
-- Incorrect: `07823846641`
-
-</details>
-
-<details>
-<summary><strong>Message Status Codes</strong></summary>
-
-Returned in the `message_status` field:
-
-| Status | Meaning |
-|--------|---------|
-| `accepted` | Message accepted by WhatsApp, being processed |
-| `held_for_quality_assessment` | Message held for quality check before delivery (may be delayed) |
-| `paused` | Message delivery paused (usually due to quality issues or rate limits) |
+- `api_key` (string, required) — System user access token used as `Authorization: Bearer <token>`.
+- `phone_number_id` (string, required for send/test tools) — WhatsApp Business phone number ID used in Graph API paths.
+- `recipient_phone` (string, required for send tools) — WhatsApp user phone number in international format, digits only, include country code (no `+`, spaces, or leading zero).
+- `media_id` (string, required for attachment tool) — Media object ID returned by WhatsApp.
+- `message_text` (string, required for text messages) — Text body to send.
+- `template_name` (string, required for template messages) — Approved template name in your WhatsApp Business Account.
+- `template_language_code` (string, optional, default `en_US`) — Template locale code.
+- `parameters` (array, optional) — Template body parameters in WhatsApp template parameter format.
+- `media_type` (string, required for media messages) — One of: `image`, `video`, `audio`, `document`.
+- `media_url` (string, required for media messages) — Publicly accessible media URL.
+- `caption` (string, optional) — Caption for `image` and `video` media types.
 
 </details>
 
 <details>
-<summary><strong>Media Types Supported</strong></summary>
+<summary><strong>Resource Formats</strong></summary>
 
-| Type | Format | Max Size |
-|------|--------|----------|
-| `image` | JPG, PNG | 5 MB |
-| `video` | MP4, 3GP | 16 MB |
-| `audio` | MP3, OGG | 16 MB |
-| `document` | PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT | 100 MB |
+**Phone Number ID:**
+
+```
+Numeric string
+Example: 1077755395418019
+```
+
+**WhatsApp Business Account ID:**
+
+```
+Numeric string
+Example: 215589313241560883
+```
+
+**Recipient Phone Number:**
+
+```
+Country code + subscriber number (digits only)
+Example: 14155552671
+```
+
+**Media ID:**
+
+```
+Media object ID returned by WhatsApp
+Example: 123456789012345
+```
 
 </details>
 
@@ -282,55 +295,74 @@ Returned in the `message_status` field:
 ## Authentication Guide
 
 <details>
-<summary><strong>WhatsApp Business Account Setup</strong></summary>
+<summary><strong>How to Get Required Credentials</strong></summary>
 
-All tools require a valid **WhatsApp Cloud API access token** and **Phone Number ID**. Here's how to obtain them:
+This server requires three values:
 
-### Step 1: Create Meta Business Account
+- `api_key` (system user access token)
+- `phone_number_id`
+- `whatsapp_business_account_id`
 
-1. Go to [Meta Business Manager](https://business.facebook.com)
-2. Click **Create Account** and follow the setup wizard
-3. Verify your business information
+### Prerequisites
 
-### Step 2: Create WhatsApp Business Account
+1. You have a Facebook account or a managed Meta account.
+2. You are registered as a Meta developer.
+3. You have access to a device with WhatsApp installed for test messaging.
 
-1. In Business Manager, navigate to **WhatsApp** in the sidebar
-2. Click **Create WhatsApp Business Account** or select existing one
-3. Configure your business profile (name, description, phone number)
-4. Get your **WhatsApp Business Account ID** (shown in setup panel)
+If you are not registered as a developer, register at:
+[https://developers.facebook.com/async/registration/](https://developers.facebook.com/async/registration/)
 
-### Step 3: Verify Phone Number
+### Step 1: Create a Meta App with WhatsApp Use Case
 
-1. In WhatsApp settings, go to **Phone Numbers**
-2. Add your business phone number
-3. Complete verification steps (SMS or call)
-4. Copy your **Phone Number ID** (required for all API calls)
+1. Open the App Dashboard in [Meta for Developers](https://developers.facebook.com/).
+2. If you already have an app:
+  - Select the app.
+  - Click **Add use cases**.
+  - Choose **Connect with customers through WhatsApp**.
+3. If you do not have an app:
+  - Create a new app.
+  - Choose **Connect with customers through WhatsApp** use case.
+  - Select an existing Business Portfolio or create one.
 
-### Step 4: Create Meta Developer App
+### Step 2: Connect App to WhatsApp Business Account
 
-1. Go to [Meta Developer Portal](https://developers.facebook.com)
-2. Click **My Apps** → **Create App**
-3. Choose **Business** type
-4. Add **WhatsApp** use case
-5. Connect your WhatsApp Business Account
+1. In App Dashboard, open your app.
+2. Click **Use cases** (pencil icon).
+3. Under **Connect with customers through WhatsApp**, click **Customize**.
+4. In **API Setup**, choose one:
+  - Select an existing WhatsApp Business Account, or
+  - Create a new WhatsApp Business Account.
+5. Save your **WhatsApp Business Account ID** from the API Setup panel.
 
-### Step 5: Generate Permanent Access Token
+### Step 3: Capture Phone Number ID
 
-1. In Business Manager, go to **System Users** (Settings → System Users)
-2. Click **Add** and create a new system user
-3. Select the user and click **Assign Assets**
-4. Assign your app and WhatsApp Business Account
-5. Click **Generate Token** for the system user
-6. Add these scopes:
-   - `whatsapp_business_management`
-   - `whatsapp_business_messaging`
-7. Copy and store the token securely
+1. In the same WhatsApp API setup flow / quickstart, send the `hello_world` template message.
+2. Save your test business **Phone Number ID** from the setup panel.
 
-**Note:** Tokens expire periodically. Regenerate as needed from system user settings.
+### Step 4: Generate Permanent System User Access Token
 
-### Step 6: Get Credentials in .env
+1. Open **Business Settings**.
+2. Go to **System users**.
+3. Create a new system user.
+4. Click **Assign Assets** and grant full control to:
+  - Your app (`Manage app`)
+  - Your WhatsApp account (`Manage WhatsApp Business Accounts`)
+5. Click **Generate token**.
+6. Add permissions:
+  - `business_management`
+  - `whatsapp_business_messaging`
+  - `whatsapp_business_management`
+7. Copy and securely store this token.
 
-Store these in your `.env` file:
+### Step 5: Use These Values in This MCP Server
+
+Use the credentials in tool calls:
+
+- `api_key` = system user access token
+- `phone_number_id` = business phone number ID
+- `whatsapp_business_account_id` = business account ID (store for your operational use and Graph API workflows)
+
+Optional local env mapping:
 
 ```env
 WHATSAPP_API_KEY=YOUR_SYSTEM_USER_ACCESS_TOKEN
@@ -338,30 +370,10 @@ PHONE_NUMBER_ID=YOUR_PHONE_NUMBER_ID
 WHATSAPP_BUSINESS_ACCOUNT_ID=YOUR_BUSINESS_ACCOUNT_ID
 ```
 
-For detailed setup, refer to [WhatsApp Cloud API Getting Started Guide](https://developers.facebook.com/docs/whatsapp/cloud-api/get-started).
+Reference:
+[https://developers.facebook.com/docs/whatsapp/cloud-api/get-started](https://developers.facebook.com/docs/whatsapp/cloud-api/get-started)
 
 </details>
-
----
-
-## Message Delivery Rules
-
- **Important:** WhatsApp enforces strict message delivery policies:
-
-### **24-Hour Customer Service Window**
-
-- You can send **non-template messages** only if:
-  - The user messaged you first (within last 24 hours), OR
-  - You're replying in an active conversation thread
-
-- After 24 hours with no user response, you **cannot** send text messages
-- **Solution:** Use template messages (no restriction)
-
-### **Template Messages (Unrestricted)**
-
-- Pre-approved templates can be sent anytime
-- No 24-hour window restriction
-- Ideal for bulk campaigns and cold outreach
 
 ---
 

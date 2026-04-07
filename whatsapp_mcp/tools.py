@@ -28,6 +28,25 @@ def register_tools(mcp: FastMCP) -> None:
             return json.dumps({"error": str(e)})
 
     @mcp.tool(
+        name="test_connection",
+        description="Test connection to WhatsApp Cloud API and verify phone number ID.",
+    )
+    def test_connection_tool(
+        api_key: str = Field(description="WhatsApp Cloud API access token"),
+        phone_number_id: str = Field(
+            description="Sender's WhatsApp Business Account phone number ID"
+        ),
+    ) -> str:
+        try:
+            result = service.test_connection(
+                api_key=api_key, phone_number_id=phone_number_id
+            )
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"test_connection failed: {e}")
+            return json.dumps({"error": str(e)})
+
+    @mcp.tool(
         name="send_text_message",
         description="Send a text message via WhatsApp Cloud API.",
     )
@@ -120,25 +139,6 @@ def register_tools(mcp: FastMCP) -> None:
             return json.dumps(result)
         except Exception as e:
             logger.error(f"send_media_message failed: {e}")
-            return json.dumps({"error": str(e)})
-
-    @mcp.tool(
-        name="test_connection",
-        description="Test connection to WhatsApp Cloud API and verify phone number ID.",
-    )
-    def test_connection_tool(
-        api_key: str = Field(description="WhatsApp Cloud API access token"),
-        phone_number_id: str = Field(
-            description="Sender's WhatsApp Business Account phone number ID"
-        ),
-    ) -> str:
-        try:
-            result = service.test_connection(
-                api_key=api_key, phone_number_id=phone_number_id
-            )
-            return json.dumps(result)
-        except Exception as e:
-            logger.error(f"test_connection failed: {e}")
             return json.dumps({"error": str(e)})
 
     @mcp.tool(

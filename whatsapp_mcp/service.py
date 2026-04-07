@@ -17,7 +17,7 @@ def get_headers(api_key: str) -> Dict[str, str]:
     }
 
 
-#################### Generic WhatsApp API Request Handler ###################
+#################### WhatsApp API Request Handler ###################
 def make_whatsapp_request(
     method: str,
     endpoint: str,
