@@ -20,13 +20,22 @@ def get_headers(api_key: str) -> Dict[str, str]:
 #################### WhatsApp API Request Handler ###################
 def make_whatsapp_request(
     method: str,
-    endpoint: str,
+    resource_path: str,
     api_key: str,
     body: Optional[Dict] = None,
     params: Optional[Dict] = None,
 ) -> Dict:
-    """Generic request handler for WhatsApp Cloud API."""
+    """Generic request handler for WhatsApp Cloud API.
+
+    Args:
+        method: HTTP method (GET, POST, etc.)
+        resource_path: API resource path (e.g., '/phone_number_id/messages')
+        api_key: WhatsApp Cloud API access token
+        body: Optional request body
+        params: Optional query parameters
+    """
     headers = get_headers(api_key)
+    endpoint = f"/{WHATSAPP_API_VERSION}{resource_path}"
     url = f"{GRAPH_API_BASE}{endpoint}"
 
     try:
@@ -70,8 +79,8 @@ def send_text_message(
         "type": "text",
         "text": {"body": message_text},
     }
-    endpoint = f"/{WHATSAPP_API_VERSION}/{phone_number_id}/messages"
-    return make_whatsapp_request("POST", endpoint, api_key, body=body)
+    resource_path = f"/{phone_number_id}/messages"
+    return make_whatsapp_request("POST", resource_path, api_key, body=body)
 
 
 def send_template_message(
@@ -101,8 +110,8 @@ def send_template_message(
     if parameters:
         body["template"]["components"] = [{"type": "body", "parameters": parameters}]
 
-    endpoint = f"/{WHATSAPP_API_VERSION}/{phone_number_id}/messages"
-    return make_whatsapp_request("POST", endpoint, api_key, body=body)
+    resource_path = f"/{phone_number_id}/messages"
+    return make_whatsapp_request("POST", resource_path, api_key, body=body)
 
 
 def send_media_message(
@@ -128,26 +137,26 @@ def send_media_message(
         media_type: media_object,
     }
 
-    endpoint = f"/{WHATSAPP_API_VERSION}/{phone_number_id}/messages"
-    return make_whatsapp_request("POST", endpoint, api_key, body=body)
+    resource_path = f"/{phone_number_id}/messages"
+    return make_whatsapp_request("POST", resource_path, api_key, body=body)
 
 
 def test_connection(api_key: str, phone_number_id: str) -> Dict:
     """Test connection to WhatsApp Cloud API."""
     logger.info(f"[test_connection] phone_number_id={phone_number_id}")
 
-    endpoint = f"/{WHATSAPP_API_VERSION}/{phone_number_id}"
+    resource_path = f"/{phone_number_id}"
     params = {"fields": "id,display_phone_number,quality_rating"}
-    return make_whatsapp_request("GET", endpoint, api_key, params=params)
+    return make_whatsapp_request("GET", resource_path, api_key, params=params)
 
 
 def get_message_attachment(api_key: str, media_id: str) -> Dict:
     """Retrieve message media URL from WhatsApp Cloud API."""
     logger.info(f"[get_message_attachment] media_id={media_id}")
 
-    endpoint = f"/{WHATSAPP_API_VERSION}/{media_id}"
+    resource_path = f"/{media_id}"
     params = {"fields": "id,media_product_type,url"}
-    return make_whatsapp_request("GET", endpoint, api_key, params=params)
+    return make_whatsapp_request("GET", resource_path, api_key, params=params)
 
 
 def parse_graph_response(response_data: dict[str, Any]) -> dict[str, Any]:
