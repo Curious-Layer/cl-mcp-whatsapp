@@ -1,24 +1,45 @@
-from tools.tool_registry import TOOLS
+#!/usr/bin/env python3
+"""MCP Server for WhatsApp Cloud API."""
 
-def list_tools():
-    return [
-        {
-            "name": name,
-            "description": tool["description"],
-            "input_schema": tool["schema"].schema()
-        }
-        for name, tool in TOOLS.items()
-    ]
+import logging
 
+from fastmcp import FastMCP
 
-def call_tool(tool_name: str, payload: dict):
-    if tool_name not in TOOLS:
-        raise ValueError(f"Tool '{tool_name}' not found")
+from whatsapp_mcp.cli import parse_args
+from whatsapp_mcp.config import configure_logging
+from whatsapp_mcp.tools import register_tools
 
-    tool = TOOLS[tool_name]
-    validated_input = tool["schema"](**payload)
-    return tool["handler"](validated_input)
+configure_logging()
+logger = logging.getLogger("whatsapp-mcp-server")
 
+mcp = FastMCP("CL WhatsApp MCP Server")
+register_tools(mcp)
+
+# Expose ASGI app for hosting platform runtime.
+app = mcp.http_app(path="/mcp", transport="streamable-http")
 
 if __name__ == "__main__":
-    print("CL-WhatsApp MCP Server Ready")
+    logger.info("=" * 60)
+    logger.info("WhatsApp MCP Server Starting")
+    logger.info("=" * 60)
+
+    args = parse_args()
+
+    run_kwargs = {}
+    if args.transport:
+        run_kwargs["transport"] = args.transport
+        logger.info(f"Transport: {args.transport}")
+    if args.host:
+        run_kwargs["host"] = args.host
+        logger.info(f"Host: {args.host}")
+    if args.port:
+        run_kwargs["port"] = args.port
+        logger.info(f"Port: {args.port}")
+
+    try:
+        mcp.run(**run_kwargs)
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user")
+    except Exception as e:
+        logger.error(f"Server crashed: {e}", exc_info=True)
+        raise

@@ -1,65 +1,52 @@
-# CL-WhatsApp
+# CL WhatsApp MCP Server
 
-Stateless MCP Server for WhatsApp integrations.
+Stateless Model Context Protocol (MCP) server scaffold for WhatsApp Cloud API.
 
-This project exposes WhatsApp tools that can be used by an AI agent,
-automation workflow, or client application using the Model Context Protocol (MCP).
+This repository now follows the Curious Layer MCP architecture standard and is intentionally minimal.
+Only the `health_check` tool is implemented for now.
 
----
+## Authentication Mode
 
-## Features
+This server is designed for WhatsApp Cloud API calls using a **System User access token** (not OAuth).
+Tenant-facing WhatsApp tools will accept auth input per call when they are added.
 
-- `send_whatsapp_message`
-- `send_whatsapp_template`
-- Fully stateless architecture
-- Mock mode enabled (no WhatsApp API key required)
-- Easy to switch to real WhatsApp Cloud API later
+## Current Tools
 
----
+- `health_check`: Returns server status and configured auth mode.
 
-## Prerequisites
+## Setup
 
-Make sure the following are installed:
-
-- Python **3.10+**
-- pip (comes with Python)
-
-Check Python version:
 ```bash
-python --version
-
-Project Structure
-pgsql
-Copy code
-CL-WhatsApp/
-├── server.py
-├── auth.py
-├── requirements.txt
-├── test.py
-├── .env
-└── tools/
-    ├── schemas.py
-    ├── handlers.py
-    └── tool_registry.py
-How to Run (Client Instructions)
-Step 1️⃣ Navigate to Project Directory
-bash
-Copy code
-cd CL-WhatsApp
-Step 2️⃣ Install Dependencies
-bash
-Copy code
 pip install -r requirements.txt
-Step 3️⃣ Start the MCP Server
-bash
-Copy code
-python server.py
-Expected output:
+```
 
-text
-Copy code
-CL-WhatsApp MCP Server Ready
-Step 4️⃣ Test the Tools (Mock Mode)
-bash
-Copy code
-python test.py
+## Run
+
+```bash
+# default transport
+python server.py
+
+# streamable-http example
+python server.py --transport streamable-http --host 127.0.0.1 --port 8001
+```
+
+## Project Structure
+
+```text
+cl-mcp-whatsapp/
+|-- server.py
+|-- requirements.txt
+|-- README.md
+`-- whatsapp_mcp/
+    |-- __init__.py
+    |-- cli.py
+    |-- config.py
+    |-- schemas.py
+    |-- service.py
+    `-- tools.py
+```
+
+## Notes
+
+- The server exports ASGI app at `/mcp` using streamable-http.
+- Additional WhatsApp API tools will be added from your API docs in the next step.
