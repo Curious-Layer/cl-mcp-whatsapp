@@ -8,17 +8,19 @@ wheels/
 
 # Virtual environments
 .venv
-venv
-env/
+/venv
+
 .github
 github
 __pycache__/
 /DELIVERY_SUMMARY.md
 /pyproject.toml
 /.python-version
-/env
-.env
-venv/
-/venv
-/.env
 
+/env
+/.env
+whatsapp_capabilities.md
+
+PHASE1_STATELESS.md
+BUILD_PLAN.md
+TOOL_REQUIREMENTS.md
