@@ -12,11 +12,11 @@ from whatsapp_mcp.tools import register_tools
 configure_logging()
 logger = logging.getLogger("whatsapp-mcp-server")
 
-mcp = FastMCP("CL WhatsApp MCP Server")
+mcp = FastMCP("MewCP WhatsApp MCP Server")
 register_tools(mcp)
 
 # Expose ASGI app for hosting platform runtime.
-app = mcp.http_app(path="/mcp", transport="streamable-http")
+app = mcp.http_app(path="/mcp", transport="streamable-http", stateless_http=True)
 
 if __name__ == "__main__":
     logger.info("=" * 60)
